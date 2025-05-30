@@ -78,9 +78,9 @@ const Verify = ({ route }) => {
 
     try {
       const response = await verifyCodeService(email, verificationCode);
-      console.log("Response:", JSON.stringify(response.data, null, 2));
       if (response.data.success) {
         if (flag === "register") {
+          showSuccess("Đăng ký thành công");
           navigator.navigate("Launcher");
         } else if (flag === "forgot-password") {
           navigator.navigate(
@@ -93,7 +93,7 @@ const Verify = ({ route }) => {
       }
     } catch (error) {
       console.error("Lỗi:", JSON.stringify(error.response ? error.response.data : { message: error.message }, null, 2));
-      showError("Đã xảy ra lỗi, vui lòng thử lại sau");
+      showError("Mã xác không đúng");
     }
   };
 
@@ -215,6 +215,8 @@ const styles = StyleSheet.create({
   },
   content: {
     alignItems: "center",
+    flex: 1,
+    gap: 20
   },
   input: {
     width: 65,

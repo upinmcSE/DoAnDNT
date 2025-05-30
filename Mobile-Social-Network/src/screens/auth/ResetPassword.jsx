@@ -15,11 +15,13 @@ import {
 import Entypo from "react-native-vector-icons/Entypo";
 import { useNavigation } from "@react-navigation/native";
 import apiClient from "../../service/apiClient";
+import { useToast } from "../../context/ToastContext";
 
 const ResetPassword = ({ route }) => {
   const [password, setPassword] = useState("");
   const [secure, setSecure] = useState(true);
   const { email } = route.params;
+  const { showSuccess, showError } = useToast();
 
   const navigator = useNavigation();
 
@@ -28,9 +30,10 @@ const ResetPassword = ({ route }) => {
       try{
         const response = await apiClient.post("/auth/reset-password", {email, password})
         if(response.data.success){
+          showSuccess("Đặt lại mật khẩu thành công");
           navigator.navigate("Launcher")
         }else{
-          console.log("Lỗi", "Lỗi không đổi được mật khẩu")
+          showError("Đặt lại mật khẩu thất bại");
         }
       }catch(err){
         console.log(err)

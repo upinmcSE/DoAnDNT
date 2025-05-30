@@ -28,7 +28,7 @@ export default function ForgotPassword() {
   const navigation = useNavigation();
   const [email, setEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false); // Thêm state cho loading
-  const { showError } = useToast();
+  const { showError, showSuccess } = useToast();
 
   const validateEmail = (email) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -42,10 +42,12 @@ export default function ForgotPassword() {
     }
 
     try {
-      setIsLoading(true); // Bật loading
+      setIsLoading(true);
       const response = await forgotPasswordService(email);
 
       if (response.data.success) {
+        setIsLoading(false);
+        showSuccess("Đã gửi email xác nhận thành công!");
         navigation.navigate(
           "Verify",
           {
