@@ -122,7 +122,7 @@ The `Message` collection stores individual messages within conversations.
 
 ### Schema
 
-```json
+```mongodb
 - **conversationId**: `ObjectId`, references `Communication`, required
   - ID of the conversation this message belongs to.
 - **senderId**: `ObjectId`, references `User`, required
