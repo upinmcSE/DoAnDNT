@@ -36,6 +36,7 @@ const Post = ({
   time, 
   onShowLikes,
   onDeletePost,
+  onUpdatePost,
 }) => {
   const navigation = useNavigation();
   
@@ -69,12 +70,6 @@ const Post = ({
   ];
 
   const checkLikeStatus = () => {
-  console.log('checkLikeStatus:', {
-    postId,
-    userId: user._id,
-    likes,
-    isLiked: likes.includes(user._id.toString())
-  });
   setLiked(likes.includes(user._id.toString()));
 };
 
@@ -206,33 +201,45 @@ const Post = ({
 
   // Hàm xử lý lưu bài viết từ modal
   const handleSavePost = async (updatedData) => {
-    const { postId, content, images } = updatedData;
+    console.log('Received updatedData:', updatedData); // Log để debug
+    if (!updatedData || typeof updatedData !== 'object') {
+      console.error('updatedData is invalid:', updatedData);
+      showError('Dữ liệu cập nhật không hợp lệ');
+      return;
+    }
+
+    const { postId, content, images = [] } = updatedData;
     try {
       const formData = new FormData();
-      formData.append("content", content);
-      images.forEach((imageUri, index) => {
-        formData.append("images", {
+      formData.append('content', content);
+
+      // Lấy danh sách ảnh mới (URI cục bộ, không phải URL)
+      const newImages = images.filter((uri) => typeof uri === 'string' && !uri.startsWith('http'));
+
+      // Gửi danh sách ảnh mới
+      newImages.forEach((imageUri, index) => {
+        formData.append('images', {
           uri: imageUri,
-          type: "image/jpeg",
+          type: 'image/jpeg',
           name: `image_${index}.jpg`,
         });
       });
 
-      // const response = await apiClient.put(`/post/${postId}`, formData, {
-      //   headers: {
-      //     "Content-Type": "multipart/form-data",
-      //   },
-      // });
+      const response = await apiClient.put(`/post/${postId}`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
 
-      // if (response.data.success) {
-      //   // Cập nhật giao diện hoặc thông báo thành công nếu cần
-      //   console.log("Bài viết đã được cập nhật:", response.data);
-      // } else {
-      //   console.error("Lỗi khi cập nhật bài viết:", response.data.message);
-      // }
+      if (response.data.success) {
+        showSuccess('Cập nhật bài viết thành công');
+        onUpdatePost(postId, { content, images });
+      } else {
+        showError('Lỗi khi cập nhật bài viết: ' + response.data.message);
+      }
     } catch (error) {
-      console.error("Lỗi khi gửi yêu cầu cập nhật:", error);
-      throw error; // Ném lỗi để modal xử lý
+      console.error('Lỗi khi gửi yêu cầu cập nhật:', error);
+      showError('Lỗi khi gửi yêu cầu cập nhật: ' + error.message);
     }
   };
 
@@ -244,7 +251,7 @@ const Post = ({
         {
           text: "Hủy",
           style: "cancel",
-          onPress: () => console.log("Đã hủy xóa bài viết"), // Không làm gì khi hủy
+          onPress: () => console.log("Đã hủy xóa bài viết"),
         },
         {
           text: "Xóa",
@@ -255,7 +262,7 @@ const Post = ({
               if (response.data.success) {
                 showSuccess("Bạn vừa xóa bài viết thành công");
                 if (onDeletePost) {
-                  onDeletePost(postId); // Gọi callback để cập nhật danh sách ở Home
+                  onDeletePost(postId);
                 }
               } else {
                 console.error("Lỗi khi xóa bài viết:", response.data.message);
@@ -268,7 +275,7 @@ const Post = ({
           },
         },
       ],
-      { cancelable: true } // Cho phép nhấn ngoài Alert để hủy
+      { cancelable: true }
     );
   };
 

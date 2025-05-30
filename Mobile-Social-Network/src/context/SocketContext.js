@@ -1,10 +1,13 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import io from 'socket.io-client';
 import { AuthContext } from './AuthContext';
+import { SOCKET_URL } from '../../env';
 import { unreadNotification } from '../service/noticeService';
 import { getUnreadMessagesCount } from '../service/chatService';
 
 const SocketContext = createContext();
+
+
 
 export const useSocket = () => {
   return useContext(SocketContext);
@@ -12,6 +15,7 @@ export const useSocket = () => {
 
 export const SocketProvider = ({ children }) => {
   const [socket, setSocket] = useState(null);
+  
   const { user } = useContext(AuthContext);
 
   const [numberNotification, setNumberNotification] = useState(0);
@@ -45,7 +49,7 @@ export const SocketProvider = ({ children }) => {
     }
 
     // Khởi tạo kết nối Socket.IO
-    const newSocket = io('http://192.168.1.6:3002', {
+    const newSocket = io(SOCKET_URL, {
       transports: ['websocket'], // Sử dụng WebSocket cho React Native
     });
     setSocket(newSocket);

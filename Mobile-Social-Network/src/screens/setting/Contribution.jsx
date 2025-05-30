@@ -2,16 +2,20 @@ import { SafeAreaView, View, StyleSheet, TextInput, Modal, ActivityIndicator, To
 import { Button, BackButton } from "../../components";
 import { Text } from "react-native";
 import React, { useState } from 'react';
+import { useToast } from "../../context/ToastContext";
 
 export default function Contribution() {
   const [isLoading, setIsLoading] = useState(false);
   const [text, setText] = useState("");
+
+  const { showInfo } = useToast();
 
   const handleSend = () => {
     setIsLoading(true);
     setTimeout(() => {
       setIsLoading(false);
       setText("");
+      showInfo("Thông báo", "Cảm ơn bạn đã gửi góp ý. Chúng tôi sẽ xem xét và phản hồi sớm nhất có thể.");
     }, 2000);
   };
 

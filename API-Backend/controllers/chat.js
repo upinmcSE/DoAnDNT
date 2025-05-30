@@ -30,7 +30,7 @@ const sendMessage = async (req, res) => {
         if (files && files.length > 0) {
         const uploadPromises = files.map((file) =>
             cloudinary.uploader.upload(file.path, {
-            folder: "messages", // Thư mục trên Cloudinary
+            folder: "messages",
             })
         );
         const results = await Promise.all(uploadPromises);

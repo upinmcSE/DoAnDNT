@@ -50,7 +50,7 @@ const Home = () => {
     fetchPosts();
   }, [activeTab]);
 
-  // Sử dụng useFocusEffect để reload posts khi màn hình được focus
+
   useFocusEffect(
     useCallback(() => {
       fetchPosts();
@@ -117,6 +117,12 @@ const Home = () => {
     setShowLikesModal(true);
   };
 
+  const handleUpdatePost = (postId, updatedData) => {
+    setPosts(posts.map(post => 
+      post._id === postId ? { ...post, ...updatedData } : post
+    ));
+  };
+
   const renderLikeItem = ({ item }) => (
     <View style={styles.likeItem}>
       <Image
@@ -160,6 +166,7 @@ const Home = () => {
           isLoading={isLoading}
           onDeletePost={handleDeletePost}
           onShowLikes={handleShowLikes}
+          onUpdatePost={handleUpdatePost}
         />
 
         <Modal

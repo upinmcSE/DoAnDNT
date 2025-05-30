@@ -21,12 +21,14 @@ import { useToast } from '../../context/ToastContext';
 import { getPostsByUserId } from "../../service/postService";
 import PostList from "../../components/PostList";
 import { getLikes } from "../../service/postService";
+
 const ProfileScreen = () => {
+
   const navigation = useNavigation();
   const [posts, setPosts] = useState([]);
   const { user } = useContext(AuthContext);
   const [showLikesModal, setShowLikesModal] = useState(false);
-    const [likesList, setLikesList] = useState([]);
+  const [likesList, setLikesList] = useState([]);
 
   const { showError, showSuccess, showInfo } = useToast();
 

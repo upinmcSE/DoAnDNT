@@ -1,9 +1,8 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useMemo } from "react";
 import {
   StyleSheet,
   Text,
   View,
-  SafeAreaView,
   TouchableOpacity,
   TextInput,
   Keyboard,
@@ -26,18 +25,18 @@ const Chat = () => {
     try {
       setIsLoading(true);
       const response = await getConversations();
-      console.log("Conversations:", response.data);
 
-      // Chuyển đổi dữ liệu conversations thành danh sách hiển thị
       const chatList = response.data.map((conversation) => {
-        const participant = conversation.participants[0]; // Lấy participant đầu tiên
+        const participant = conversation.participants[0];
         return {
           id: conversation._id,
           conversationId: conversation._id, 
           name: participant.name,
           avtUrl: participant.avtUrl,
           userId: participant._id,
-          lastMessage: conversation.lastMessage.text
+          lastMessage: conversation.lastMessage.text,
+          isRead: conversation.lastMessage.isRead,
+          date: conversation.lastMessage.createdAt,
         };
       });
 
@@ -48,6 +47,21 @@ const Chat = () => {
       setIsLoading(false);
     }
   };
+
+  // Lọc danh sách chat dựa trên searchText
+  const filteredChatList = useMemo(() => {
+    if (!searchText.trim()) {
+      return listChat;
+    }
+    
+    return listChat.filter((chat) => {
+      const searchLower = searchText.toLowerCase().trim();
+      return (
+        chat.name.toLowerCase().includes(searchLower) ||
+        (chat.lastMessage && chat.lastMessage.toLowerCase().includes(searchLower))
+      );
+    });
+  }, [listChat, searchText]);
 
   useEffect(() => {
     fetchConversations();
@@ -66,7 +80,7 @@ const Chat = () => {
 
   const handleSearchSubmit = () => {
     if (searchText.trim()) {
-      // Có thể thêm logic tìm kiếm ở đây nếu cần
+      // Logic tìm kiếm khi nhấn Enter (nếu cần)
       console.log("Search:", searchText.trim());
     }
   };
@@ -89,7 +103,7 @@ const Chat = () => {
                 placeholder="Tìm kiếm..."
                 placeholderTextColor="#888"
                 value={searchText}
-                onChangeText={setSearchText}
+                onChangeText={setSearchText} // Real-time search khi gõ
                 autoFocus={true}
                 onSubmitEditing={handleSearchSubmit}
               />
@@ -112,17 +126,19 @@ const Chat = () => {
           <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
             <Text style={{ fontSize: 18, color: "#888" }}>Đang tải...</Text>
           </View>
-        ) : listChat.length > 0 ? (
+        ) : filteredChatList.length > 0 ? (
           <FlatList
-            data={listChat}
+            data={filteredChatList} // Sử dụng danh sách đã lọc
             renderItem={({ item }) => (
               <ChatItem
                 name={item.name}
                 avatar={item.avtUrl}
-                isViewed={false}
+                isViewed={!item.isRead}
                 message={item.lastMessage}
-                unreadCount={3}
-                onPress={() => {
+                unreadCount={1}
+                date={item.date}
+                onPress={async () => {
+                  await fetchConversations();
                   navigation.navigate('Chat', {
                     screen: 'MessageChat',
                     params: {
@@ -143,7 +159,9 @@ const Chat = () => {
           />
         ) : (
           <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-            <Text style={{ fontSize: 18, color: "#888" }}>Không có tin nhắn nào</Text>
+            <Text style={{ fontSize: 18, color: "#888" }}>
+              {searchText.trim() ? "Không tìm thấy kết quả" : "Không có tin nhắn nào"}
+            </Text>
           </View>
         )}
       </View>

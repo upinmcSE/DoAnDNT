@@ -22,20 +22,20 @@ import { sendMessage, getMessages, readMessage, blockMassage } from "../../servi
 
 const MessageChat = ({ route }) => {
   const { conversationId, userData } = route.params;
-
+  const { fetchUnreadMessages } = useSocket();
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
   const [loading, setLoading] = useState(true);
+  const [selectedImage, setSelectedImage] = useState(null); // State for image preview
+  const [imagePreviewVisible, setImagePreviewVisible] = useState(false); // State for image preview modal
   const flatListRef = useRef(null);
-
   const navigation = useNavigation();
   const { user } = useContext(AuthContext);
-  const { socket } = useSocket(); 
-
+  const { socket } = useSocket();
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedMessageId, setSelectedMessageId] = useState(null);
 
-
+  // Fetch messages
   useEffect(() => {
     const fetchMessages = async () => {
       try {
@@ -64,7 +64,7 @@ const MessageChat = ({ route }) => {
 
         const readMessagePromises = unreadMessages.map(async (msg) => {
           try {
-            const h = await readMessage(msg.id);
+            await readMessage(msg.id);
             return { id: msg.id, success: true };
           } catch (error) {
             console.error(`Error marking message ${msg.id} as read:`, error);
@@ -89,16 +89,15 @@ const MessageChat = ({ route }) => {
       }
     };
     fetchMessages();
+    fetchUnreadMessages();
   }, [conversationId, user._id]);
 
-  // Thiết lập Socket.IO để lắng nghe tin nhắn mới
+  // Socket.IO setup
   useEffect(() => {
     if (!socket) return;
 
-    // Tham gia conversation
     socket.emit("joinConversation", conversationId);
 
-    // Lắng nghe tin nhắn mới
     socket.on("newMessage", (message) => {
       console.log("Received new message:", message);
       if (message.conversationId === conversationId) {
@@ -117,18 +116,17 @@ const MessageChat = ({ route }) => {
       }
     });
 
-    // Xử lý lỗi socket
     socket.on("connect_error", (error) => {
       console.error("Socket connection error:", error);
     });
 
-    // Cleanup khi rời khỏi conversation
     return () => {
       socket.emit("leaveConversation", conversationId);
       socket.off("newMessage");
     };
   }, [socket, conversationId, user._id]);
 
+  // Handle sending text message
   const handleSendMessage = async () => {
     if (!newMessage.trim() || loading) return;
 
@@ -153,7 +151,6 @@ const MessageChat = ({ route }) => {
       setNewMessage("");
       flatListRef.current?.scrollToEnd({ animated: true });
 
-      // Gửi tin nhắn qua Socket.IO
       if (socket) {
         socket.emit("sendMessage", {
           conversationId,
@@ -162,7 +159,7 @@ const MessageChat = ({ route }) => {
           text: newMessage,
           imageUrl: [],
           createdAt: new Date().toISOString(),
-          _id: response._id, // Gửi ID tin nhắn từ server
+          _id: response._id,
         });
       }
     } catch (error) {
@@ -173,11 +170,12 @@ const MessageChat = ({ route }) => {
     }
   };
 
+  // Handle picking and previewing image
   const handlePickImage = async () => {
     if (loading) return;
 
     try {
-      let result = await ImagePicker.launchImageLibraryAsync({
+      const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
         allowsEditing: true,
         aspect: [4, 3],
@@ -185,44 +183,58 @@ const MessageChat = ({ route }) => {
       });
 
       if (!result.canceled) {
-        const imageUri = result.assets[0].uri;
-        setLoading(true);
+        setSelectedImage(result.assets[0].uri);
+        setImagePreviewVisible(true); // Show preview modal
+      }
+    } catch (error) {
+      console.error("Lỗi khi chọn hình ảnh:", error);
+      alert("Không thể chọn hình ảnh. Vui lòng thử lại!");
+    }
+  };
 
-        const formData = new FormData();
-        formData.append("text", "");
-        formData.append("image", {
-          uri: imageUri,
-          type: "image/jpeg",
-          name: "image.jpg",
+  // Handle sending image after preview
+  const handleSendImage = async () => {
+    if (!selectedImage || loading) return;
+
+    setLoading(true);
+    try {
+      const formData = new FormData();
+      formData.append("text", newMessage || "");
+      formData.append("images", {
+        uri: selectedImage,
+        type: "image/jpeg",
+        name: "image.jpg",
+      });
+
+      const response = await sendMessage(userData._id, formData);
+
+      const newImageMsg = {
+        id: response._id || (messages.length + 1).toString(),
+        text: newMessage || "",
+        imageUri: response.imageUrl && response.imageUrl.length > 0 ? response.imageUrl[0] : selectedImage,
+        sender: "me",
+        date: new Date().toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
+      };
+
+      setMessages([...messages, newImageMsg]);
+      setNewMessage("");
+      setSelectedImage(null);
+      setImagePreviewVisible(false);
+      flatListRef.current?.scrollToEnd({ animated: true });
+
+      if (socket) {
+        socket.emit("sendMessage", {
+          conversationId,
+          senderId: user._id,
+          receiverId: userData._id,
+          text: newMessage || "",
+          imageUrl: [response.imageUrl || selectedImage],
+          createdAt: new Date().toISOString(),
+          _id: response._id,
         });
-
-        const response = await sendMessage(userData._id, formData);
-
-        const newImageMsg = {
-          id: response._id || (messages.length + 1).toString(),
-          imageUri: response.imageUrl || imageUri,
-          sender: "me",
-          date: new Date().toLocaleTimeString([], {
-            hour: "2-digit",
-            minute: "2-digit",
-          }),
-        };
-
-        setMessages([...messages, newImageMsg]);
-        flatListRef.current?.scrollToEnd({ animated: true });
-
-        // Gửi tin nhắn ảnh qua Socket.IO
-        if (socket) {
-          socket.emit("sendMessage", {
-            conversationId,
-            senderId: user._id,
-            receiverId: userData._id,
-            text: "",
-            imageUrl: [response.imageUrl || imageUri],
-            createdAt: new Date().toISOString(),
-            _id: response._id,
-          });
-        }
       }
     } catch (error) {
       console.error("Lỗi khi gửi hình ảnh:", error);
@@ -232,6 +244,7 @@ const MessageChat = ({ route }) => {
     }
   };
 
+  // Handle recalling message
   const handleRecallMessage = async () => {
     if (!selectedMessageId) return;
 
@@ -241,13 +254,12 @@ const MessageChat = ({ route }) => {
       setMessages((prevMessages) =>
         prevMessages.map((msg) =>
           msg.id === selectedMessageId
-            ? { ...msg, text: "Tin nhắn đã thu hồi", isRecalled: true }
+            ? { ...msg, text: "Tin nhắn đã thu hồi", isRecalled: true, imageUri: null }
             : msg
         )
       );
       setModalVisible(false);
       setSelectedMessageId(null);
-      // Thông báo Socket.IO (nếu cần)
       if (socket) {
         socket.emit("recallMessage", {
           conversationId,
@@ -278,8 +290,7 @@ const MessageChat = ({ route }) => {
         )}
         <TouchableOpacity
           onPress={() => {
-            if (isMe) {
-              console.log("Nhấn vào tin nhắn:", item.id); // Debug
+            if (isMe && !item.isRecalled) {
               setSelectedMessageId(item.id);
               setModalVisible(true);
             }
@@ -305,10 +316,21 @@ const MessageChat = ({ route }) => {
               </View>
             )}
             {!showAvatar && !isMe && <View style={styles.avatarPlaceholder} />}
-            {item.imageUri ? (
+            {item.isRecalled ? (
+              <View
+                style={isMe ? styles.messageBubbleMe : styles.messageBubbleOther}
+              >
+                <Text
+                  style={isMe ? styles.messageTextMe : styles.messageTextOther}
+                >
+                  {item.text}
+                </Text>
+              </View>
+            ) : item.imageUri ? (
               <Image
                 source={{ uri: item.imageUri }}
-                style={{ width: 200, height: 200, borderRadius: 10 }}
+                style={styles.messageImage}
+                resizeMode="cover"
               />
             ) : (
               <View
@@ -321,6 +343,9 @@ const MessageChat = ({ route }) => {
                 </Text>
               </View>
             )}
+              {/* {isMe && item.isRead && !item.isRecalled && (
+                <Text style={styles.readStatus}>Đã đọc</Text>
+              )} */}
           </View>
         </TouchableOpacity>
       </>
@@ -375,7 +400,7 @@ const MessageChat = ({ route }) => {
 
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
-        keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 0}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 0}
       >
         <View style={styles.inputContainer}>
           <TouchableOpacity style={styles.attachButton} onPress={handlePickImage}>
@@ -383,7 +408,7 @@ const MessageChat = ({ route }) => {
           </TouchableOpacity>
           <TextInput
             style={styles.input}
-            placeholder="Type your message..."
+            placeholder="Nhập tin nhắn..."
             value={newMessage}
             onChangeText={setNewMessage}
             onSubmitEditing={handleSendMessage}
@@ -421,6 +446,43 @@ const MessageChat = ({ route }) => {
             </TouchableWithoutFeedback>
           </View>
         </TouchableWithoutFeedback>
+      </Modal>
+
+      {/* Modal for image preview */}
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={imagePreviewVisible}
+        onRequestClose={() => setImagePreviewVisible(false)}
+      >
+        <View style={styles.imagePreviewModal}>
+          <View style={styles.imagePreviewContainer}>
+            {selectedImage && (
+              <Image
+                source={{ uri: selectedImage }}
+                style={styles.previewImage}
+                resizeMode="contain"
+              />
+            )}
+            <View style={styles.previewButtonContainer}>
+              <TouchableOpacity
+                style={[styles.previewButton, styles.cancelButton]}
+                onPress={() => {
+                  setImagePreviewVisible(false);
+                  setSelectedImage(null);
+                }}
+              >
+                <Text style={styles.previewButtonText}>Hủy</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.previewButton}
+                onPress={handleSendImage}
+              >
+                <Text style={styles.previewButtonText}>Gửi</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
       </Modal>
     </SafeAreaView>
   );
@@ -516,6 +578,19 @@ const styles = StyleSheet.create({
     color: "black",
     fontSize: 15,
   },
+  messageImage: {
+    width: 200,
+    height: 200,
+    borderRadius: 10,
+    marginVertical: 5,
+  },
+  readStatus: {
+    fontSize: 10,
+    color: "#666",
+    alignSelf: "flex-end",
+    marginRight: 10,
+    marginTop: 2,
+  },
   inputContainer: {
     flexDirection: "row",
     alignItems: "center",
@@ -550,7 +625,6 @@ const styles = StyleSheet.create({
     marginTop: 50,
     fontSize: 16,
   },
-
   modalOverlay: {
     flex: 1,
     backgroundColor: "rgba(0, 0, 0, 0.5)",
@@ -573,12 +647,48 @@ const styles = StyleSheet.create({
     borderRadius: 5,
   },
   cancelButton: {
-    width: "80%",
     backgroundColor: "#E0E0E0",
   },
   modalButtonText: {
     fontSize: 16,
     color: "#1E88E5",
+    fontWeight: "500",
+  },
+  imagePreviewModal: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.8)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  imagePreviewContainer: {
+    backgroundColor: "white",
+    borderRadius: 10,
+    padding: 10,
+    width: "90%",
+    alignItems: "center",
+  },
+  previewImage: {
+    width: "100%",
+    height: 300,
+    borderRadius: 10,
+    marginBottom: 10,
+  },
+  previewButtonContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    width: "100%",
+  },
+  previewButton: {
+    flex: 1,
+    paddingVertical: 10,
+    marginHorizontal: 5,
+    alignItems: "center",
+    borderRadius: 5,
+    backgroundColor: "#1E88E5",
+  },
+  previewButtonText: {
+    color: "white",
+    fontSize: 16,
     fontWeight: "500",
   },
 });

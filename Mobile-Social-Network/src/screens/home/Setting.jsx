@@ -49,14 +49,6 @@ const Setting = () => {
           </View>
         </View>
 
-        {/* <View style={styles.optionContainer}>
-          <Text style={styles.subTitle}>Sáng/Tối</Text>
-          <Switch
-          
-            onValueChange={() => console.log("Chuyển đổi chế độ sáng/tối")}
-          />
-        </View> */}
-
         <TouchableOpacity 
           style={styles.optionItem}
           onPress={() => navigation.navigate("ChangePassword")}

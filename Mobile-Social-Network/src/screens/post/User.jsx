@@ -23,8 +23,11 @@ import { createConversation } from "../../service/chatService";
 
 const User = ({ route }) => {
   const navigation = useNavigation();
+  
   const { userId } = route.params;
+
   const { user, fetchMyUserData } = useContext(AuthContext);
+  const [showLikesModal, setShowLikesModal] = useState(false);
 
   const [userData, setUserData] = useState(null); 
   const [posts, setPosts] = useState([]);
@@ -35,10 +38,8 @@ const User = ({ route }) => {
   // Hàm lấy thông tin người dùng
   const fetchUserData = async () => {
     try {
-      console.log("userId", userId);
       const response = await getUser(userId);
       const result = response.data;
-      
       setUserData(result.data);
       
     } catch (error) {
@@ -258,11 +259,10 @@ const User = ({ route }) => {
                 userId={post.userId._id}
                 postId={post._id}
                 content={post.content}
-                liked={post.likes.length > 0}
                 avt={post.userId.avtUrl ? { uri: post.userId.avtUrl } : require('../../assets/images/opps.png')}
                 images={post.imageUrls}
-                numLikes={post.likes.length}
-                numCmts={post.comments.length}
+                likes={post.likes}
+                comments={post.comments}
                 time={post.createdAt}
               />
             </View>

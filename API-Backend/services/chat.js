@@ -72,7 +72,7 @@ const getMessages = async (conversationId) => {
         const conversation = await Communication.findById(conversationId)
             .populate({
                 path: 'participants',
-                select: 'name avtUrl', // Chỉ lấy name và avtUrl
+                select: 'name avtUrl',
             })
                
         if (!conversation) {
@@ -82,7 +82,7 @@ const getMessages = async (conversationId) => {
         const messages = await Message.find({ conversationId })
             .select('-__v');
 
-        return { conversation, messages }; // Trả về cả thông tin conversation và messages
+        return { conversation, messages };
     } catch (error) {
         throw new Exception('Failed to get messages', HttpStatusCode.INTERNAL_SERVER);
     }
@@ -109,7 +109,7 @@ const getConversations = async (userId) => {
                     conversationId: communication._id,
                 })
                     .sort({ createdAt: -1 }) // Sắp xếp theo createdAt giảm dần
-                    .select('text senderId createdAt isRecalled imageUrl'); // Lấy các trường cần thiết
+                    .select('text senderId createdAt isRead imageUrl'); // Lấy các trường cần thiết
 
                 // Loại bỏ thông tin của chính userId khỏi participants
                 const filteredParticipants = communication.participants.filter(
@@ -122,8 +122,8 @@ const getConversations = async (userId) => {
                           text: lastMessage.isRecalled ? "Tin nhắn đã thu hồi" : lastMessage.text,
                           senderId: lastMessage.senderId,
                           createdAt: lastMessage.createdAt,
-                          isRecalled: lastMessage.isRecalled || false,
                           imageUrl: lastMessage.imageUrl || null,
+                          isRead: lastMessage.isRead,
                       }
                     : null;
 

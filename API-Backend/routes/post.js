@@ -14,6 +14,14 @@ router.post(
     postController.createPost
 );
 
+// update post
+router.put(
+  '/:postId',
+  upload.array('images', 10),
+  body('content'),
+  postController.updatePost
+);
+
 
 // get all posts
 router.get('/',

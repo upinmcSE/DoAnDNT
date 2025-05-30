@@ -16,10 +16,12 @@ const LoginScreen = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [secure, setSecure] = useState(true);
-  const [isLoading, setIsLoading] = useState(false); // Thêm state cho loading
+  const [isLoading, setIsLoading] = useState(false);
 
   const { login } = useContext(AuthContext);
+  
   const { showError } = useToast();
+
   const navigator = useNavigation();
 
   const validateEmail = (email) => {
@@ -38,7 +40,6 @@ const LoginScreen = () => {
     try {
       setIsLoading(true); // Bật loading
       const response = await loginService(email, password);
-      console.log('Login response:', response);
       await login(
         response.data.accessToken,
         response.data.refreshToken

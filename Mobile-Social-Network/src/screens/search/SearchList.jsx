@@ -60,13 +60,6 @@ const SearchList = ({ route }) => {
         </View>
       </View>
       <ScrollView style={styles.content}>
-        
-        {/* {users.length > 0 && (
-          <View>
-            <Text style={{ fontSize: 16, marginBottom: 10 }}>* Người dùng</Text>
-          </View>
-        )} */}
-
         {users.map((user) => (
           <View key={user._id} style={styles.user}>
             <UserItem userId={user._id} avtUrl={user.avtUrl} name={user.name} />

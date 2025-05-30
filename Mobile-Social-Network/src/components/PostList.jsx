@@ -10,7 +10,7 @@ import {
 import Post from '../components/Post';
 import { useToast } from '../context/ToastContext';
 
-const PostList = ({ posts, isLoading, onDeletePost, onShowLikes }) => {
+const PostList = ({ posts, isLoading, onDeletePost, onShowLikes, onUpdatePost }) => {
   const [refreshing, setRefreshing] = useState(false);
 
   const { showError } = useToast();
@@ -34,6 +34,7 @@ const PostList = ({ posts, isLoading, onDeletePost, onShowLikes }) => {
         time={item.createdAt}
         onShowLikes={() => onShowLikes(item._id)}
         onDeletePost={() => onDeletePost(item._id, true)}
+        onUpdatePost={onUpdatePost}
       />
     </View>
   ), [onDeletePost, onShowLikes]);

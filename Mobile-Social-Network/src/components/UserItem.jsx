@@ -1,11 +1,13 @@
 import React, { useContext, useState } from 'react';
 import { View, Text, Image, StyleSheet, TouchableOpacity } from 'react-native';
 import { AuthContext } from '../context/AuthContext';
+import { useNavigation } from '@react-navigation/native';
 
 
 const UserItem = ({userId, avtUrl, name}) => {
   const { user } = useContext(AuthContext);
   const [isFollowing, setIsFollowing] = useState(user.following.includes(userId));
+  const navigation = useNavigation();
 
   const handleFollowToggle = () => {
     setIsFollowing(!isFollowing);
@@ -15,7 +17,7 @@ const UserItem = ({userId, avtUrl, name}) => {
     <TouchableOpacity 
     onPress={() => {
       if (userId !== user._id) {
-        navigation.navigate("Profile", { userId });
+        navigation.navigate("User", { userId });
       }
     }}
     style={styles.container}>

@@ -47,6 +47,46 @@ const createPost = async (req, res) => {
     }
 };
 
+const updatePost = async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return sendError(
+      res,
+      errors.array().map((err) => err.msg).toString(),
+      HttpStatusCode.BAD_REQUEST
+    );
+  }
+
+  try {
+    const { postId } = req.params;
+    const userId = req.userId;
+    const { content } = req.body;
+    const files = req.files
+
+    // Upload ảnh mới lên Cloudinary
+    const uploadedImages = [];
+    if (files && files.length > 0) {
+      const uploadPromises = files.map((file) =>
+        cloudinary.uploader.upload(file.path, {
+          folder: 'posts',
+        })
+      );
+      const results = await Promise.all(uploadPromises);
+      uploadedImages.push(...results.map((result) => ({
+        url: result.secure_url,
+        public_id: result.public_id,
+      })));
+    }    
+
+    const imageUrls = uploadedImages.map((img) => img.url);
+
+    const post = await postService.updatePost(postId, content, imageUrls);
+    return sendSuccess(res, post, 'Cập nhật bài viết thành công', HttpStatusCode.OK);
+  } catch (error) {
+    return sendError(res, error.message, error.code || HttpStatusCode.INTERNAL_SERVER);
+  }
+};
+
 const getAllPosts = async (req, res) => {
     try {
         const posts = await postService.getAllPosts();
@@ -147,6 +187,7 @@ const getPostByPostId = async (req, res) => {
 
 export default {
     createPost,
+    updatePost,
     getPostsByUserId,
     likePost,
     getAllPosts,

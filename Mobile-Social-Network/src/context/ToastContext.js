@@ -4,6 +4,7 @@ import Toast  from 'react-native-toast-message';
 const ToastContext = createContext();
 
 export const ToastProvider = ({ children }) => {
+  
   const showToast = (type, text1, text2) => {
     Toast.show({
       type: type, // 'success', 'error', 'info'

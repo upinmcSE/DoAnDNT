@@ -51,6 +51,29 @@ const createPost = async ({ userId, content, imageUrls }) => {
     }
 };
 
+const updatePost = async (postId, content, imageUrls) => {
+    try{
+      console.log("Updating post with ID:", imageUrls);
+        const post = await Post.findById(postId);
+        if (!post) {
+            throw new Exception(HttpStatusCode.NOT_FOUND, "Post not found");
+        }
+
+        // Cập nhật nội dung bài viết
+        post.content = content || post.content;
+        // Cập nhật ảnh nếu có
+        if (imageUrls && imageUrls.length > 0) {
+            post.imageUrls = [...post.imageUrls, ...imageUrls];
+        }
+
+        await post.save();
+        return post;
+
+    }catch (error) {
+        throw new Exception(HttpStatusCode.INTERNAL_SERVER, error.message);
+    }
+}
+
 const getAllPosts = async () => {
     try {
         const posts = await Post.find()
@@ -115,7 +138,7 @@ const likePost = async (postId, userId) => {
       throw new Exception(HttpStatusCode.BAD_REQUEST, "Post already liked");
     }
 
-    // Add like
+    
     post.likes.push(userId);
     
     // Send notification if not liking own post
@@ -128,6 +151,7 @@ const likePost = async (postId, userId) => {
         toUser: postOwnerId,
         postId,
       });
+      
       await notification.save();
 
       // Send realtime notification
@@ -226,7 +250,13 @@ const deletePost = async (postId, userId) => {
           throw new Exception(HttpStatusCode.FORBIDDEN, "You do not have permission to delete this post");
       }
 
+
       await Post.deleteOne({ _id: postId });
+
+      // Xóa các thông báo liên quan đến bài viết này
+      await Notification.deleteMany({ postId });
+
+
       return { message: "Post deleted successfully" };
   }catch (error) {
       throw new Exception(HttpStatusCode.INTERNAL_SERVER, error.message);
@@ -249,8 +279,10 @@ const getPostByPostId = async (postId) => {
 
 }
 
+
 export default {
     createPost,
+    updatePost,
     getPostsByUserId,
     likePost,
     unlikePost,

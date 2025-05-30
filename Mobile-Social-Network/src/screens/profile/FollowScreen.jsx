@@ -1,4 +1,3 @@
-// src/screens/FollowScreen.jsx
 import React, { useContext, useState } from "react";
 import { SafeAreaView, StyleSheet, View, Text, ScrollView, TouchableOpacity } from "react-native";
 import { UserProfileCard, BackButton } from "../../components";
@@ -6,7 +5,9 @@ import { useNavigation } from "@react-navigation/native";
 import { AuthContext } from "../../context/AuthContext";
 
 const FollowScreen = ({ route }) => {
+
   const navigation = useNavigation();
+
   const flag = route.params?.flag;
   const [activeTab, setActiveTab] = useState(flag || "following");
 
@@ -65,9 +66,9 @@ const FollowScreen = ({ route }) => {
 
       {/* Nội dung */}
       <ScrollView contentContainerStyle={styles.scrollContainer}>
-        {(activeTab === "following" ? followingList : followerList).map((user) => (
-          <View key={user} style={styles.cardContainer}>
-            <UserProfileCard userId={user} flag={activeTab}/>
+        {(activeTab === "following" ? followingList : followerList).map((userId) => (
+          <View key={userId} style={styles.cardContainer}>
+            <UserProfileCard userId={userId} flag={activeTab}/>
           </View>
         ))}
       </ScrollView>

@@ -1,30 +1,32 @@
 import { StyleSheet, Text, View, Image, TouchableOpacity } from 'react-native';
+import { formatTime } from '../utils/timeUtils';
 
-
-const ChatItem = ({ name, message, date, avatar, onPress, isViewed, smallAvatar, unreadCount }) => {
-
-  
+const ChatItem = ({ name, message, date, avatar, onPress, isViewed }) => {
   return (
     <TouchableOpacity style={styles.chatItem} onPress={onPress}>
-      <Image source={ avatar ? { uri: avatar} : require("../assets/images/opps.png")} style={styles.avatar} />
+      <Image
+        source={avatar ? { uri: avatar } : require('../assets/images/opps.png')}
+        style={styles.avatar}
+      />
       <View style={styles.chatInfo}>
         <Text style={styles.name}>{name}</Text>
         <View style={styles.messageDateContainer}>
-          <Text style={[styles.message, isViewed ? {color: "#888"} : {color: "gray-500"}]}>{message}</Text>
-          <Text style={styles.date}> • Th 5</Text>
+          <Text
+            style={[styles.message, isViewed ? { color: 'black', fontSize: 16 } : { color: 'gray-500' }]}
+          >
+            {message}
+          </Text>
+          <Text style={styles.date}>   {formatTime(date)}</Text>
         </View>
       </View>
-      {isViewed ? (
-        <Image source={ smallAvatar ? { uri: smallAvatar} : require("../assets/images/opps.png")} />
-      ) : (
-        <View style={styles.badgeContainer}>
-          {unreadCount > 0 && (
-            <View style={styles.badge}>
-              <Text style={styles.badgeText}>{unreadCount}</Text>
-            </View>
-          )}
-        </View>
-      )}
+
+      <View style={styles.badgeContainer}>
+        {isViewed && (
+          <View style={styles.badge}>
+            <Text style={styles.badgeText}>1</Text>
+          </View>
+        )}
+      </View>
     </TouchableOpacity>
   );
 };
