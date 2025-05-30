@@ -36,7 +36,7 @@
 
 ```json
 {
-  "message": "Register successfully"
+  "message": "Mã xác thực đã được gửi đến email"
 }
 ```
 
@@ -44,7 +44,7 @@
 
 ```json
 {
-  "error": "USER_ALREADY_EXISTS",
+  "error": "404",
   "message": "Người dùng đã tồn tại"
 }
 ```
@@ -81,7 +81,7 @@
 
 ```json
 {
-  "message": "Verify successfully"
+  "message": "Bạn đã xác thực và đăng ký thành công"
 }
 ```
 
@@ -89,8 +89,17 @@
 
 ```json
 {
-  "error": "ACTIVATION_CODE_NOT_MATCH",
-  "message": "Invalid or expired verification code."
+  "error": "404",
+  "message": "Mã xác thực không đúng"
+}
+```
+
+##### Response (Error)
+
+```json
+{
+  "error": "404",
+  "message": "Mã xác thực hết hạn"
 }
 ```
 
@@ -127,7 +136,7 @@
 
 ```json
 {
-  "message": "Login successfully",
+  "message": "Đăng nhập thành công",
   "result": {
     "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
     "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
@@ -139,7 +148,7 @@
 
 ```json
 {
-  "error": "UNAUTHENTICATED",
+  "error": "404",
   "message": "Tài khoản hoặc mật khẩu chưa đúng"
 }
 ```
@@ -186,7 +195,7 @@
 
 ```json
 {
-  "error": "INVALID_TOKEN",
+  "error": "404",
   "message": "Token không hợp lệ"
 }
 ```
@@ -222,7 +231,7 @@
 
 ```json
 {
-  "message": "Forgot password successfully"
+  "message": "Mã xác thực đã được gửi đến email"
 }
 ```
 
@@ -230,8 +239,8 @@
 
 ```json
 {
-  "error": "500",
-  "message": "Internal Server Error"
+  "error": "404",
+  "message": "email không tồn tại"
 }
 ```
 
@@ -277,8 +286,15 @@
 
 ```json
 {
-  "error": "ACTIVATION_CODE_NOT_MATCH",
+  "error": "404",
   "message": "Mã kích hoạt không đúng"
+}
+```
+
+```json
+{
+  "error": "404",
+  "message": "Mã kích hoạt hết hạn"
 }
 ```
 
@@ -307,15 +323,6 @@
 ```json
 {
   "message": "Logged out successfully."
-}
-```
-
-##### Response (Error)
-
-```json
-{
-  "error": "UNAUTHENTICATED",
-  "message": "Tài khoản hoặc mật khẩu chưa đúng"
 }
 ```
 
@@ -445,7 +452,7 @@
 
 ```json
 {
-  "error": "NOT_FOUND_USER",
+  "error": "404",
   "message": "Không tìm thấy người dùng"
 }
 ```
@@ -483,8 +490,8 @@
 
 ```json
 {
-  "error": "INVALID_FILE",
-  "message": "Invalid file format or size."
+  "error": "404",
+  "message": "Dung lượng file quá lớn"
 }
 ```
 
@@ -529,7 +536,7 @@
 
 ```json
 {
-  "error": "INVALID_PASSWORD",
+  "error": "404",
   "message": "Mật khẩu không khớp"
 }
 ```
